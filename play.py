@@ -38,6 +38,8 @@ def calculate_winner(move1, move2):
             return "User"
         if move2 == "rock":
             return "Computer"
+        
+    return "Unknown"
 
 
 model = load_model("rock-paper-scissors-model.h5")
@@ -52,12 +54,14 @@ while True:
         continue
 
     # rectangle for user to play
-    cv2.rectangle(frame, (100, 100), (500, 500), (255, 255, 255), 2)
+    # cv2.rectangle(frame, (100, 100), (500, 500), (255, 255, 255), 2)
+    cv2.rectangle(frame, (30, 70), (230, 270), (255, 255, 255), 2)    
+    
     # rectangle for computer to play
-    cv2.rectangle(frame, (800, 100), (1200, 500), (255, 255, 255), 2)
+    cv2.rectangle(frame, (400, 70), (600, 270), (255, 255, 255), 2)
 
     # extract the region of image within the user rectangle
-    roi = frame[100:500, 100:500]
+    roi = frame[50:250, 50:250]
     img = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, (227, 227))
 
@@ -86,10 +90,32 @@ while True:
                 (400, 600), font, 2, (0, 0, 255), 4, cv2.LINE_AA)
 
     if computer_move_name != "none":
-        icon = cv2.imread(
-            "images/{}.png".format(computer_move_name))
-        icon = cv2.resize(icon, (400, 400))
-        frame[100:500, 800:1200] = icon
+        icon = cv2.imread("images/{}.png".format(computer_move_name))
+        if icon is not None:
+            icon = cv2.resize(icon, (400, 400))
+
+            # Get the dimensions of the icon
+            icon_height, icon_width, _ = icon.shape
+
+            # Get the region in the frame where the icon will be placed
+            region = frame[50:250, 500:700]
+
+            # Check if the region is not empty
+            if not region.size == 0:
+                # Resize the icon to match the dimensions of the region
+                resized_icon = cv2.resize(icon, (200, 200))
+                
+                # Calculate the position to place the resized icon
+                y_offset = 70
+                x_offset = 400
+               
+                frame[y_offset:y_offset + resized_icon.shape[0], x_offset:x_offset + resized_icon.shape[1]] = resized_icon
+
+            else:
+                print("Error: Region is empty.")
+        else:
+            print("Error loading image for {}".format(computer_move_name))
+
 
     cv2.imshow("Rock Paper Scissors", frame)
 
