@@ -2,6 +2,7 @@ from keras.models import load_model
 import cv2
 import numpy as np
 from random import choice
+import time
 
 REV_CLASS_MAP = {
     0: "rock",
@@ -12,10 +13,8 @@ REV_CLASS_MAP = {
     5: "thumbs_down"
 }
 
-
 def mapper(val):
     return REV_CLASS_MAP[val]
-
 
 def calculate_winner(move1, move2):
     if move1 == move2:
@@ -39,7 +38,6 @@ def calculate_winner(move1, move2):
         if move2 == "rock":
             return "Computer"
 
-
 def main():
     model = load_model("rock-paper-scissors-model.h5")
 
@@ -47,6 +45,11 @@ def main():
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
 
     prev_move = None
+    score = {'wins': 0, 'losses': 0, 'ties': 0}
+
+    # Initialize timer variables
+    start_time = time.time()
+    wait_time = 3  # 3 seconds
 
     while True:
         ret, frame = cap.read()
@@ -68,40 +71,46 @@ def main():
         move_code = np.argmax(pred[0])
         user_move_name = mapper(move_code)
 
-        # predict the winner (human vs computer)
-        if prev_move != user_move_name:
-            if user_move_name != "none":
-                computer_move_name = choice(['rock', 'paper', 'scissors'])
+        # Check if the timer has expired
+        if time.time() - start_time >= wait_time:
+            # Reset the timer and process user's move
+            start_time = time.time()
 
-                # Generate computer's move icon
-                icon = cv2.imread("images/{}.png".format(computer_move_name))
+            # predict the winner (human vs computer)
+            if prev_move != user_move_name:
+                if user_move_name != "none":
+                    computer_move_name = choice(['rock', 'paper', 'scissors'])
+                    winner = calculate_winner(user_move_name, computer_move_name)
 
-                # Print dimensions for troubleshooting
-                print("Icon dimensions:", icon.shape)
-                print("Region dimensions:", frame[70:270, 400:600].shape)
+                    # Update the score based on the winner
+                    if winner == "User":
+                        score['wins'] += 1
+                    elif winner == "Computer":
+                        score['losses'] += 1
+                    else:
+                        score['ties'] += 1
 
-                # Resize icon to match the region dimensions
-                icon = cv2.resize(icon, (200, 200))
+                    # Display the current score using cv2.putText with adjusted font size and position
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.putText(frame, "Score: Wins - {}, Losses - {}, Ties - {}".format(score['wins'], score['losses'], score['ties']),
+                                (20, 330), font, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
 
-                # Check if the region dimensions match the icon dimensions
-                if frame[70:270, 400:600].shape == icon.shape:
+                    # Display computer's move icon
+                    icon = cv2.imread("images/{}.png".format(computer_move_name))
+                    icon = cv2.resize(icon, (200, 200))  # Adjust the size as needed
                     frame[70:270, 400:600] = icon
-                else:
-                    print("Error: Icon dimensions do not match the specified region.")
-            else:
-                computer_move_name = "none"
+
+                    # Display the frame
+                    cv2.imshow("Rock Paper Scissors", frame)
+
         prev_move = user_move_name
 
         # display the information
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame, "Your Move: " + user_move_name,
                     (50, 50), font, 1.2, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(frame, "Computer's Move: " + computer_move_name,
+        cv2.putText(frame, "Computer's Move: " + "Waiting...",
                     (750, 50), font, 1.2, (255, 255, 255), 2, cv2.LINE_AA)
-
-        # Display dimensions mismatch error if applicable
-        cv2.putText(frame, "Winner: None",
-                    (400, 600), font, 2, (0, 0, 255), 4, cv2.LINE_AA)
 
         # Display the frame
         cv2.imshow("Rock Paper Scissors", frame)
@@ -112,7 +121,6 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
-
 
 if __name__ == "__main__":
     main()
