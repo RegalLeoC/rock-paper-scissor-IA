@@ -84,4 +84,4 @@ model.compile(
 model.fit(np.array(data), np.array(labels), epochs=10)
 
 # save the model for later use
-model.save("rock-paper-scissors-model.h5")
+model.save("rock-paper-scissors-model2.h5")

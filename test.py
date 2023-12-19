@@ -19,7 +19,7 @@ def mapper(val):
     return REV_CLASS_MAP[val]
 
 
-model = load_model("rock-paper-scissors-model.h5")
+model = load_model("rock-paper-scissors-model2.h5")
 
 # prepare the image
 img = cv2.imread(filepath)
