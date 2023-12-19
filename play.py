@@ -49,7 +49,7 @@ def main():
 
     # Initialize timer variables
     start_time = time.time()
-    wait_time = 3  # 3 seconds
+    wait_time = 0  # 0 seconds
 
     while True:
         ret, frame = cap.read()
@@ -108,9 +108,9 @@ def main():
         # display the information
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame, "Your Move: " + user_move_name,
-                    (50, 50), font, 1.2, (255, 255, 255), 2, cv2.LINE_AA)
+                    (20, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
         cv2.putText(frame, "Computer's Move: " + "Waiting...",
-                    (750, 50), font, 1.2, (255, 255, 255), 2, cv2.LINE_AA)
+                    (350, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
 
         # Display the frame
         cv2.imshow("Rock Paper Scissors", frame)
