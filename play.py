@@ -52,6 +52,47 @@ def main():
     wait_time = 0  # 0 seconds
     computer_move_name = ""
 
+    # Flag to check if there's a "thumbs_up"
+    thumbs_up_detected = False
+
+    while not thumbs_up_detected:
+        ret, frame = cap.read()
+        if not ret:
+            continue
+
+        # rectangle for user to play
+        cv2.rectangle(frame, (30, 70), (230, 270), (255, 255, 255), 2)
+        # rectangle for computer to play
+        cv2.rectangle(frame, (400, 70), (600, 270), (255, 255, 255), 2)
+
+        # extract the region of image within the user rectangle
+        roi = frame[50:250, 50:250]
+        img = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(img, (227, 227))
+
+        # predict the move made
+        pred = model.predict(np.array([img]))
+        move_code = np.argmax(pred[0])
+        user_move_name = mapper(move_code)
+
+        # Check if the user's move is "thumbs_up"
+        if user_move_name == "thumbs_up":
+            thumbs_up_detected = True
+
+        # Display the frame with the current user's move
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(frame, "Your Move: {}".format(user_move_name),
+                    (20, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+        cv2.imshow("Rock Paper Scissors", frame)
+
+        k = cv2.waitKey(10)
+        if k == ord('q'):
+            break
+
+    # Reset variables before starting the game loop
+    start_time = time.time()
+    thumbs_up_detected = False
+
     while True:
         ret, frame = cap.read()
         if not ret:
