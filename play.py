@@ -47,15 +47,11 @@ def main():
     prev_move = None
     score = {'wins': 0, 'losses': 0, 'ties': 0}
 
-    # Initialize timer variables
-    start_time = time.time()
-    wait_time = 0  # 0 seconds
-    computer_move_name = ""
+  
+    gesture_detected = False
+    reset_round = False
 
-    # Flag to check if there's a "thumbs_up"
-    thumbs_up_detected = False
-
-    while not thumbs_up_detected:
+    while not gesture_detected:
         ret, frame = cap.read()
         if not ret:
             continue
@@ -75,9 +71,11 @@ def main():
         move_code = np.argmax(pred[0])
         user_move_name = mapper(move_code)
 
-        # Check if the user's move is "thumbs_up"
+       
         if user_move_name == "thumbs_up":
-            thumbs_up_detected = True
+            gesture_detected = True
+        elif user_move_name == "thumbs_down":
+            reset_round = True
 
         # Display the frame with the current user's move
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -89,77 +87,91 @@ def main():
         if k == ord('q'):
             break
 
-    # Reset variables before starting the game loop
-    start_time = time.time()
-    thumbs_up_detected = False
+    while gesture_detected:
+        # Reset variables for the new round
+        start_time = time.time()
+        wait_time = 0  # 0 seconds
+        computer_move_name = ""
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            continue
+        game_loop = True
 
-        # rectangle for user to play
-        cv2.rectangle(frame, (30, 70), (230, 270), (255, 255, 255), 2)
-        # rectangle for computer to play
-        cv2.rectangle(frame, (400, 70), (600, 270), (255, 255, 255), 2)
+        while game_loop:
+            ret, frame = cap.read()
+            if not ret:
+                continue
 
-        # extract the region of image within the user rectangle
-        roi = frame[50:250, 50:250]
-        img = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, (227, 227))
+            # rectangle for user to play
+            cv2.rectangle(frame, (30, 70), (230, 270), (255, 255, 255), 2)
+            # rectangle for computer to play
+            cv2.rectangle(frame, (400, 70), (600, 270), (255, 255, 255), 2)
 
-        # predict the move made
-        pred = model.predict(np.array([img]))
-        move_code = np.argmax(pred[0])
-        user_move_name = mapper(move_code)
+            # extract the region of image within the user rectangle
+            roi = frame[50:250, 50:250]
+            img = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
+            img = cv2.resize(img, (227, 227))
 
-        # Check if the timer has expired
-        if time.time() - start_time >= wait_time:
-            # Reset the timer and process user's move
-            start_time = time.time()
+            # predict the move made
+            pred = model.predict(np.array([img]))
+            move_code = np.argmax(pred[0])
+            user_move_name = mapper(move_code)
 
-            # predict the winner (human vs computer)
-            if prev_move != user_move_name:
-                if user_move_name != "none":
-                    computer_move_name = choice(['rock', 'paper', 'scissors'])
-                    winner = calculate_winner(user_move_name, computer_move_name)
+            # Check if the timer has expired
+            if time.time() - start_time >= wait_time:
+                # Reset the timer and process user's move
+                start_time = time.time()
 
-                    # Update the score based on the winner
-                    if winner == "User":
-                        score['wins'] += 1
-                    elif winner == "Computer":
-                        score['losses'] += 1
-                    else:
-                        score['ties'] += 1
+                # predict the winner (human vs computer)
+                if prev_move != user_move_name:
+                    if user_move_name != "none":
+                        computer_move_name = choice(['rock', 'paper', 'scissors'])
+                        winner = calculate_winner(user_move_name, computer_move_name)
 
-                    # Display the current score using cv2.putText with adjusted font size and position
-                    font = cv2.FONT_HERSHEY_SIMPLEX
-                    cv2.putText(frame, "Score: Wins - {}, Losses - {}, Ties - {}".format(score['wins'], score['losses'], score['ties']),
-                                (20, 330), font, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+                        # Update the score based on the winner
+                        if winner == "User":
+                            score['wins'] += 1
+                        elif winner == "Computer":
+                            score['losses'] += 1
+                        else:
+                            score['ties'] += 1
 
-                    # Display computer's move icon
-                    icon = cv2.imread("images/{}.png".format(computer_move_name))
-                    icon = cv2.resize(icon, (200, 200))  # Adjust the size as needed
-                    frame[70:270, 400:600] = icon
+                        # Display the current score using cv2.putText with adjusted font size and position
+                        font = cv2.FONT_HERSHEY_SIMPLEX
+                        cv2.putText(frame, "Score: Wins - {}, Losses - {}, Ties - {}".format(score['wins'], score['losses'], score['ties']),
+                                    (20, 330), font, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
 
-                    # Display the frame
-                    cv2.imshow("Rock Paper Scissors", frame)
+                        # Display computer's move icon
+                        icon = cv2.imread("images/{}.png".format(computer_move_name))
+                        icon = cv2.resize(icon, (200, 200))  # Adjust the size as needed
+                        frame[70:270, 400:600] = icon
 
-        prev_move = user_move_name
+                        # Display the frame
+                        cv2.imshow("Rock Paper Scissors", frame)
 
-        # display the information
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(frame, "Your Move: " + user_move_name,
-                    (20, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(frame, "Computer's Move: " + computer_move_name,
-                    (350, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+                prev_move = user_move_name
 
-        # Display the frame
-        cv2.imshow("Rock Paper Scissors", frame)
+                # display the information
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(frame, "Your Move: " + user_move_name,
+                            (20, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(frame, "Computer's Move: " + computer_move_name,
+                            (350, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
 
-        k = cv2.waitKey(10)
-        if k == ord('q'):
-            break
+                # Display the frame
+                cv2.imshow("Rock Paper Scissors", frame)
+
+            k = cv2.waitKey(10)
+            if k == ord('q'):
+                game_loop = False
+                gesture_detected = False
+                break
+            elif user_move_name == "thumbs_down":
+                reset_round = True
+                game_loop = False
+
+        # Check if the round needs to be reset
+        if reset_round:
+            score = {'wins': 0, 'losses': 0, 'ties': 0}
+            gesture_detected = False  
 
     cap.release()
     cv2.destroyAllWindows()
