@@ -38,7 +38,7 @@ except FileExistsError:
     print("{} directory already exists.".format(IMG_CLASS_PATH))
     print("All images gathered will be saved along with existing items in this folder")
 
-cap = cv2.VideoCapture("http://192.168.1.138:4747/video", cv2.CAP_FFMPEG)
+cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
 
 start = False

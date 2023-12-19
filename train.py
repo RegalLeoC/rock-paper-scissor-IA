@@ -8,7 +8,7 @@ from keras.models import Sequential
 import tensorflow as tf
 import os
 
-IMG_SAVE_PATH = 'image_data'
+IMG_SAVE_PATH = 'image_data2'
 
 CLASS_MAP = {
     "rock": 0,
