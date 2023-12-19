@@ -50,6 +50,7 @@ def main():
     # Initialize timer variables
     start_time = time.time()
     wait_time = 0  # 0 seconds
+    computer_move_name = ""
 
     while True:
         ret, frame = cap.read()
@@ -109,7 +110,7 @@ def main():
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame, "Your Move: " + user_move_name,
                     (20, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(frame, "Computer's Move: " + "Waiting...",
+        cv2.putText(frame, "Computer's Move: " + computer_move_name,
                     (350, 50), font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
 
         # Display the frame
